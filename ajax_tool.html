@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Ajax HTTP Tool - protonfish.com</title>
+
+<style type="text/css">
+* {margin:0; padding:0}
+
+html {padding: 5px 0 0 5px; font-family: sans-serif;}
+h1 {padding: 0 0 5px 5px; font-size:28px; color:#999; font-style:italic;}
+h2 {padding: 5px 0; font-size:20px; color: #666;}
+h3 {margin: 0 0 5px 0; font-size: 16px;}
+h6 {padding: 5px 0 0 0;}
+
+#httpRequest, #httpResponse {border: 1px solid #ccc; overflow: auto; padding: 0 5px 5px 5px; margin: 0 5px 5px 0;}
+#httpRequest {width: 286px; float: left;}
+#httpRequest input {width: 280px; margin: 0 0 5px 0;}
+#httpRequest table {border-collapse: collapse; margin: 5px 0;}
+#httpRequest td {padding: 0 2px 2px 0;}
+#httpRequest table input {width: 137px; margin:0;}
+#httpRequest button, #httpRequest select {margin: 5px 0 5px 5px;}
+#httpRequest button {padding: .4em;}
+#httpRequest textarea {width: 280px;}
+
+#httpRequest fieldset {border: 0 none;}
+#httpRequest fieldset label {font-weight: bold; width: 143px; float: left; margin: 0 0 5px 0; display: block;}
+#httpRequest fieldset input {width: 135px;  float: left; margin: 0 2px 2px 0;}
+
+#httpResponse pre {background: #eee; border: 1px solid #666; margin: 0 0 10px 0; padding: 10px; overflow: auto;}
+</style>
+
+<script type="text/javascript">
+var document, XMLHttpRequest;
+
+function entityAllowed(method) {
+	return (method === 'POST' || method === 'OPTIONS' || method === 'PUT');
+}
+
+function entityEnable(methodSelect) {
+	var entityInput = document.getElementById('httpRequestEntity');
+	entityInput.disabled = !entityAllowed(methodSelect.value);
+}
+
+function lineBreak(rawHtml) {
+	rawHtml = rawHtml.replace(/\r\n/g, "\n");
+	return rawHtml.replace(/\r/g, "\n;");
+}
+
+function htmlEncode(rawHtml) {
+	rawHtml = rawHtml.replace(/</g, "&lt;");
+	rawHtml = rawHtml.replace(/>/g, "&gt;");
+	rawHtml = lineBreak(rawHtml);
+	return rawHtml.replace(/\n/g, "<br>");
+}
+
+function getReqData() {
+	var reqData = {'method': '', 'resource': '', 'hdr': [], 'val': [], 'entity': ''}, ii;
+	reqData.method = document.getElementById('httpRequestMethod').value;
+	reqData.resource = document.getElementById('httpRequestResource').value;
+
+	for (ii = 0; ii < 3; ii = ii + 1) {
+		reqData.hdr[ii] = document.getElementById('httpRequestHeader' + ii).value;
+		reqData.val[ii] = document.getElementById('httpRequestValue' + ii).value;
+	}
+	return reqData;
+}
+
+function sendRequest() {
+	var reqData = getReqData(), ii, len, X$ = new XMLHttpRequest();
+
+	X$.open(reqData.method, reqData.resource, true);
+
+	if (entityAllowed(reqData.method)) {
+		reqData.entity = document.getElementById('httpRequestEntity').value;
+		X$.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	}
+
+	len = reqData.hdr.length;
+	for (ii = 0; ii < len; ii = ii + 1) {
+		if (reqData.hdr[ii]) {
+			X$.setRequestHeader(reqData.hdr[ii], reqData.val[ii]);
+		}
+	}
+
+	X$.onreadystatechange = function () {
+		if (X$.readyState === 4) {
+			document.getElementById('httpResponseStatus').innerHTML = X$.status + " " + X$.statusText;
+
+			var allResponseHeaders = X$.getAllResponseHeaders();
+			document.getElementById('httpResponseHeader').innerHTML = lineBreak(allResponseHeaders);
+			document.getElementById('httpResponseEntity').innerHTML = htmlEncode(X$.responseText);
+		}
+	};
+
+	X$.send(reqData.entity);
+	return false;
+}
+</script>
+</head>
+
+<body>
+<h1>Ajax HTTP Tool</h1>
+
+<form onsubmit="return sendRequest();" id="httpRequest">
+	<h2>Request</h2>
+
+	<h3>Method 
+		<select id="httpRequestMethod" onchange="entityEnable(this)">
+			<option value="GET">GET</option>
+			<option value="POST">POST</option>
+			<option value="PUT">PUT</option>
+			<option value="DELETE">DELETE</option>
+			<option value="OPTIONS">OPTIONS</option>
+			<option value="HEAD">HEAD</option>
+			<option value="TRACE">TRACE</option>
+			<option value="CONNECT">CONNECT</option>
+		</select>
+		<button>Send Request</button>
+	</h3>
+
+	<h3>Resource URI</h3>
+	<input id="httpRequestResource">
+
+	<fieldset>
+		<label>Request Header</label>
+		<label>Value</label>
+		<input id="httpRequestHeader0">
+		<input id="httpRequestValue0">
+		<input id="httpRequestHeader1">
+		<input id="httpRequestValue1">
+		<input id="httpRequestHeader2">
+		<input id="httpRequestValue2">
+	</fieldset>
+
+	<h3>Entity Body</h3>
+	<textarea id="httpRequestEntity" cols="30" rows="3" disabled="disabled"></textarea>
+
+	<h6>Version 1.0 &copy; 2011</h6>
+</form>
+
+<div id="httpResponse">
+	<h2>Response</h2>
+	<h3>Status: <span id="httpResponseStatus"></span></h3>
+	
+	<h3>Headers</h3>
+	<pre id="httpResponseHeader"></pre>
+	
+	<h3>Entity Body</h3>
+	<pre id="httpResponseEntity"></pre>
+</div>
+
+</body>
+</html>
