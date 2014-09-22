@@ -6,3 +6,5 @@ I created this single page of HTML/CSS/JavaScript as a utility to quickly work w
 It can accept parameters in the query string. The "Save" button converts the UI into a sharable URL.
 
 Because most Ajax is not cross-domain, save a copy of the HTML page to the server it is meant to work with before using.
+
+View demo at http://chrisbroski.github.io/Ajax-Tool/ajax_tool.html
