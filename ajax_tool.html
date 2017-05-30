@@ -5,13 +5,25 @@
 <title>Ajax HTTP Tool - protonfish.com</title>
 
 <style type="text/css">
-* {margin: 0; padding: 0; }
+* {margin: 0; padding: 0; box-sizing: border-box; }
 
 html {padding: 5px 0 0 5px; font-family: sans-serif; }
 h1 {padding: 0 0 5px 5px; font-size: 28px; color:#999; font-style: italic; }
 h2 {padding: 5px 0; font-size: 20px; color: #666; }
 h3 {margin: 0 0 5px 0; font-size: 16px; }
-h6 {padding: 5px 0 0 0; }
+
+#uri {
+    padding: 5px;
+    overflow: auto;
+}
+#uri label {display: block; width: 40px; float: left; line-height: 30px; vertical-align: bottom; }
+#uri > div {overflow: auto; }
+#uri input {
+    padding: 4px;
+    display: block;
+    font-size: 16px;
+    width: 100%;
+}
 
 #httpRequest, #httpResponse {
     margin: 0 5px 5px 0; padding: 0 5px 5px 5px;
@@ -28,7 +40,7 @@ h6 {padding: 5px 0 0 0; }
 #httpRequest table input {width: 137px; margin:0; }
 #httpRequest button, #httpRequest select {margin: 5px 0 5px 5px; }
 #httpRequest button {padding: .4em; }
-#httpRequest textarea {width: 280px; }
+#httpRequest textarea {width: 272px; }
 #httpRequest fieldset {border: 0 none; }
 #httpRequest fieldset label {
     margin: 0 0 5px 0;
@@ -50,7 +62,15 @@ h6 {padding: 5px 0 0 0; }
 <body>
 <h1>Ajax HTTP Tool</h1>
 
-<form onsubmit="return sendRequest();" id="httpRequest">
+<form onsubmit="return sendRequest(); ">
+
+<section id="uri">
+    <label>URI:</label>
+    <div><input id="httpRequestResource"></div>
+</section>
+
+<section id="httpRequest">
+
 <h2>Request</h2>
 
 <h3>Method
@@ -66,9 +86,6 @@ h6 {padding: 5px 0 0 0; }
 </select>
 </h3>
 
-<h3>Resource URI</h3>
-<textarea id="httpRequestResource"></textarea>
-
 <fieldset>
 <label>Request Header</label>
 <label>Value</label>
@@ -79,6 +96,9 @@ h6 {padding: 5px 0 0 0; }
 <textarea id="httpRequestEntity" cols="30" rows="3" disabled="disabled"></textarea>
 
 <button>Send Request</button>
+
+</section>
+
 </form>
 
 <div id="httpResponse">
