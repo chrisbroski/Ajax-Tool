@@ -64,11 +64,10 @@ h6 {padding: 5px 0 0 0; }
 <option value="TRACE">TRACE
 <option value="CONNECT">CONNECT
 </select>
-<button>Send Request</button>
 </h3>
 
 <h3>Resource URI</h3>
-<input id="httpRequestResource">
+<textarea id="httpRequestResource"></textarea>
 
 <fieldset>
 <label>Request Header</label>
@@ -78,8 +77,8 @@ h6 {padding: 5px 0 0 0; }
 
 <h3>Entity Body</h3>
 <textarea id="httpRequestEntity" cols="30" rows="3" disabled="disabled"></textarea>
-<button onclick="save()">Save</button>
-<label><input type="checkbox" value="1" id="autorun"> Run on load</label>
+
+<button>Send Request</button>
 </form>
 
 <div id="httpResponse">
@@ -96,32 +95,11 @@ h6 {padding: 5px 0 0 0; }
 <script>
 /*jslint browser: true, sloppy: true */
 
-var X$ = new XMLHttpRequest(),
+var xhr = new XMLHttpRequest(),
     reqMax = 4;
 
 function I$(id) {
     return document.getElementById(id);
-}
-
-function Q$(name) {
-    var reQs, val;
-    reQs = new RegExp("[\\?&]" + name + "=([^&#]*)", "i");
-    val = reQs.exec(window.location.search);
-    if (val) {
-        return decodeURIComponent(val[1]);
-    }
-    return "";
-}
-
-function S$(elSel, selVal) {
-    var ii, len;
-    len = elSel.length;
-    for (ii = 0; ii < len; ii = ii + 1) {
-        if (elSel.options[ii].value === selVal) {
-            elSel.selectedIndex = ii;
-            break;
-        }
-    }
 }
 
 function lineBreak(rawHtml) {
@@ -160,81 +138,48 @@ function getReqData() {
 function sendRequest() {
     var reqData = getReqData(), ii, len;
 
-    X$.open(reqData.method, reqData.resource, true);
+    xhr.open(reqData.method, reqData.resource, true);
 
     if (entityAllowed(reqData.method)) {
         reqData.entity = I$('httpRequestEntity').value;
         if (!reqData.hdr.some(function (hdr) {
             return hdr.toUpperCase() === "CONTENT-TYPE";
         })) {
-            X$.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         }
     }
 
     len = reqData.hdr.length;
     for (ii = 0; ii < len; ii = ii + 1) {
         if (reqData.hdr[ii]) {
-            X$.setRequestHeader(reqData.hdr[ii], reqData.val[ii]);
+            xhr.setRequestHeader(reqData.hdr[ii], reqData.val[ii]);
         }
     }
 
-    X$.onreadystatechange = function () {
-        if (X$.readyState === 4) {
-            I$('httpResponseStatus').innerHTML = X$.status + " " + X$.statusText;
+    xhr.onload = function () {
+        I$('httpResponseStatus').innerHTML = xhr.status + " " + xhr.statusText;
 
-            var allResponseHeaders = X$.getAllResponseHeaders();
-            I$('httpResponseHeader').innerHTML = lineBreak(allResponseHeaders);
-            I$('httpResponseEntity').innerHTML = htmlEncode(X$.responseText);
+        var allResponseHeaders = xhr.getAllResponseHeaders();
+        I$('httpResponseHeader').innerHTML = lineBreak(allResponseHeaders);
+
+        if (xhr.getResponseHeader('Content-Type') === 'application/json') {
+            I$('httpResponseEntity').innerHTML = JSON.stringify(JSON.parse(xhr.responseText), null, '    ');
+        } else {
+            I$('httpResponseEntity').innerHTML = htmlEncode(xhr.responseText);
         }
     };
 
-    X$.send(reqData.entity);
+    xhr.send(reqData.entity);
     return false;
 }
 
-function load() {
+function init() {
     var ii, reqHeaders = [];
-    S$(I$('httpRequestMethod'), Q$('method').toUpperCase());
-    entityEnable(I$('httpRequestMethod'));
-
-    I$('httpRequestResource').value = decodeURIComponent(Q$('uri'));
-
     for (ii = 0; ii < reqMax; ii = ii + 1) {
         reqHeaders[ii] = '<input id="httpRequestHeader' + ii + '"><input id="httpRequestValue' + ii + '">';
     }
     I$('reqHead').innerHTML = reqHeaders.join("\n");
-
-    for (ii = 0; ii < reqMax; ii = ii + 1) {
-        I$('httpRequestHeader' + ii).value = Q$('reqHead' + ii);
-        I$('httpRequestValue' + ii).value = Q$('reqHead' + ii + 'val');
-    }
-
-    I$('httpRequestEntity').value = decodeURIComponent(Q$('rb'));
-
-    if (Q$('autorun') === '1') {
-        sendRequest();
-        I$('autorun').checked = true;
-    }
 }
 
-function save() {
-    var saveString = '?', ii;
-    saveString = saveString + 'method=' + I$('httpRequestMethod').value;
-    saveString = saveString + '&uri=' + encodeURIComponent(I$('httpRequestResource').value);
-
-    for (ii = 0; ii < reqMax; ii = ii + 1) {
-        if (I$('httpRequestHeader' + ii).value) {
-            saveString = saveString + '&reqHead' + ii + '=' + I$('httpRequestHeader' + ii).value;
-            saveString = saveString + '&reqHead' + ii + 'val=' + encodeURIComponent(I$('httpRequestValue' + ii).value);
-        }
-    }
-
-    if (I$('autorun').checked) {
-        saveString = saveString + '&autorun=1';
-    }
-    location.href = saveString;
-}
-
-load();
-
+init()
 </script>
