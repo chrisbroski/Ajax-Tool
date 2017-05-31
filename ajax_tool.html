@@ -31,33 +31,33 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
     width: 100%;
 }
 
-#httpRequest, #httpResponse {
+#httpReq, #httpRsp {
     margin: 0 5px 5px 0; padding: 0 5px 5px 5px;
     border: 1px solid #ccc;
     overflow: auto;
 }
 
-#httpRequest {width: 286px; float: left; }
-#httpRequest input {width: 280px; margin: 0 0 5px 0; }
-#httpRequest input[type="checkbox"] {width: auto; margin: 0 0 5px 0; }
-#httpRequest label {font-size: 12px; }
-#httpRequest table {border-collapse: collapse; margin: 5px 0; }
-#httpRequest td {padding: 0 2px 2px 0; }
-#httpRequest table input {width: 137px; margin:0; }
-#httpRequest button, #httpRequest select {margin: 5px 0 5px 5px; }
-#httpRequest button {padding: .4em; }
-#httpRequest textarea {width: 272px; }
-#httpRequest fieldset {border: 0 none; }
-#httpRequest fieldset label {
+#httpReq {width: 286px; float: left; }
+#httpReq input {width: 280px; margin: 0 0 5px 0; }
+#httpReq input[type="checkbox"] {width: auto; margin: 0 0 5px 0; }
+#httpReq label {font-size: 12px; }
+#httpReq table {border-collapse: collapse; margin: 5px 0; }
+#httpReq td {padding: 0 2px 2px 0; }
+#httpReq table input {width: 137px; margin:0; }
+#httpReq button, #httpReq select {margin: 5px 0 5px 5px; }
+#httpReq button {padding: .4em; }
+#httpReq textarea {width: 272px; }
+#httpReq fieldset {border: 0 none; }
+#httpReq fieldset label {
     margin: 0 0 5px 0;
     font-weight: bold;
-    width: 143px;
+    width: 137px;
     float: left;
     display: block;
 }
-#httpRequest fieldset input {width: 135px; float: left; margin: 0 2px 2px 0; }
+#httpReq fieldset input {width: 135px; float: left; margin: 0 2px 2px 0; }
 
-#httpResponse pre {
+#httpRsp pre {
     margin: 0 0 10px 0; padding: 10px;
     background: #eee;
     border: 1px solid #666;
@@ -68,19 +68,19 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
 <body>
 <h1>Ajax HTTP Tool</h1>
 
-<form onsubmit="return sendRequest(); ">
+<form onsubmit="return sendReq(); ">
 
 <section id="uri">
     <label>URI:</label>
-    <div><input id="httpRequestResource"></div>
+    <div><input id="httpReqResource"></div>
 </section>
 
-<section id="httpRequest">
+<section id="httpReq">
 
 <h2>Request</h2>
 
 <h3>Method
-<select id="httpRequestMethod" onchange="entityEnable(this)">
+<select id="httpReqMethod" onchange="entityEnable(this)">
 <option value="GET">GET
 <option value="POST">POST
 <option value="PUT">PUT
@@ -99,23 +99,29 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
 </fieldset>
 
 <h3>Entity Body</h3>
-<textarea id="httpRequestEntity" cols="30" rows="3" disabled="disabled"></textarea>
+<textarea id="httpReqEntity" cols="30" rows="3" disabled="disabled"></textarea>
 
 <button>Send Request</button>
+
+<datalist id="req-headers">
+<option value="Accept">
+<option value="Content-Type">
+<option value="Cache-Control">
+</datalist>
 
 </section>
 
 </form>
 
-<div id="httpResponse">
+<div id="httpRsp">
 <h2>Response</h2>
-<h3>Status: <span id="httpResponseStatus"></span></h3>
+<h3>Status: <span id="httpRspStatus"></span></h3>
 
 <h3>Headers</h3>
-<pre id="httpResponseHeader"></pre>
+<pre id="httpRspHeader"></pre>
 
 <h3>Entity Body</h3>
-<pre id="httpResponseEntity"></pre>
+<pre id="httpRspEntity"></pre>
 </div>
 
 <script>
@@ -124,74 +130,65 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
 var xhr = new XMLHttpRequest(),
     reqMax = 4;
 
-function I$(id) {
-    return document.getElementById(id);
+function $(selector) {
+    return document.querySelector(selector);
 }
 
 function lineBreak(rawHtml) {
+    // Normalizes Windows/Unix line endings
     rawHtml = rawHtml.replace(/\r\n/g, "\n");
     return rawHtml.replace(/\r/g, "\n");
 }
 
-function htmlEncode(rawHtml) {
-    rawHtml = rawHtml.replace(/</g, "&lt;");
-    rawHtml = rawHtml.replace(/>/g, "&gt;");
-    rawHtml = lineBreak(rawHtml);
-    return rawHtml.replace(/\n/g, "<br>");
-}
-
 function entityAllowed(method) {
-    return (method === 'POST' || method === 'OPTIONS' || method === 'PUT');
+    return (method === "POST" || method === "OPTIONS" || method === "PUT");
 }
 
 function entityEnable(methodSelect) {
-    var entityInput = I$('httpRequestEntity');
-    entityInput.disabled = !entityAllowed(methodSelect.value);
+    $("#httpReqEntity").disabled = !entityAllowed(methodSelect.value);
 }
 
 function getReqData() {
-    var reqData = {'method': '', 'resource': '', 'hdr': [], 'val': [], 'entity': ''}, ii;
-    reqData.method = I$('httpRequestMethod').value;
-    reqData.resource = I$('httpRequestResource').value;
+    var reqData = {"method": "", "resource": "", "hdr": {}, "entity": ""}, ii;
+    reqData.method = $("#httpReqMethod").value;
+    reqData.resource = $("#httpReqResource").value;
 
     for (ii = 0; ii < reqMax; ii = ii + 1) {
-        reqData.hdr[ii] = I$('httpRequestHeader' + ii).value;
-        reqData.val[ii] = I$('httpRequestValue' + ii).value;
+        if ($("#httpReqHeader" + ii).value) {
+            reqData.hdr[$("#httpReqHeader" + ii).value] = $("#httpReqValue" + ii).value;
+        }
     }
     return reqData;
 }
 
-function sendRequest() {
-    var reqData = getReqData(), ii, len;
+function hasContentType(hdr) {
+    return hdr.toUpperCase() === "CONTENT-TYPE";
+}
+
+function sendReq() {
+    var reqData = getReqData();
 
     xhr.open(reqData.method, reqData.resource, true);
 
     if (entityAllowed(reqData.method)) {
-        reqData.entity = I$('httpRequestEntity').value;
-        if (!reqData.hdr.some(function (hdr) {
-            return hdr.toUpperCase() === "CONTENT-TYPE";
-        })) {
+        reqData.entity = $("#httpReqEntity").value;
+        if (!reqData.hdr.some(hasContentType)) {
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         }
     }
 
-    len = reqData.hdr.length;
-    for (ii = 0; ii < len; ii = ii + 1) {
-        if (reqData.hdr[ii]) {
-            xhr.setRequestHeader(reqData.hdr[ii], reqData.val[ii]);
-        }
-    }
+    Object.keys(reqData.hdr).forEach(function (hdr) {
+        xhr.setRequestHeader(hdr, reqData.hdr[hdr]);
+    });
 
     xhr.onload = function () {
-        I$('httpResponseStatus').innerHTML = xhr.status + " " + xhr.statusText;
+        $("#httpRspStatus").textContent = xhr.status + " " + xhr.statusText;
+        $("#httpRspHeader").textContent = lineBreak(xhr.getAllResponseHeaders());
 
-        var allResponseHeaders = xhr.getAllResponseHeaders();
-        I$('httpResponseHeader').innerHTML = lineBreak(allResponseHeaders);
-
-        if (xhr.getResponseHeader('Content-Type') === 'application/json') {
-            I$('httpResponseEntity').innerHTML = JSON.stringify(JSON.parse(xhr.responseText), null, '    ');
+        if (xhr.getResponseHeader("Content-Type") === "application/json") {
+            $("#httpRspEntity").textContent = JSON.stringify(JSON.parse(xhr.responseText), null, "    ");
         } else {
-            I$('httpResponseEntity').innerHTML = htmlEncode(xhr.responseText);
+            $("#httpRspEntity").textContent = xhr.responseText;
         }
     };
 
@@ -200,12 +197,19 @@ function sendRequest() {
 }
 
 function init() {
-    var ii, reqHeaders = [];
+    var ii, reqInput;
     for (ii = 0; ii < reqMax; ii = ii + 1) {
-        reqHeaders[ii] = '<input id="httpRequestHeader' + ii + '"><input id="httpRequestValue' + ii + '">';
+        reqInput = document.createElement("input");
+        reqInput.id = "httpReqHeader" + ii;
+        reqInput.setAttribute("list", "req-headers");
+        $("#reqHead").appendChild(reqInput);
+
+        reqInput = document.createElement("input");
+        reqInput.id = "httpReqValue" + ii;
+        $("#reqHead").appendChild(reqInput);
     }
-    I$('reqHead').innerHTML = reqHeaders.join("\n");
 }
 
-init()
+init();
+
 </script>
