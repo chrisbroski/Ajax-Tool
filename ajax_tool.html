@@ -105,8 +105,22 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
 
 <datalist id="req-headers">
 <option value="Accept">
+<option value="Authorization">
 <option value="Content-Type">
 <option value="Cache-Control">
+<option value="Origin">
+<option value="Range">
+</datalist>
+
+<datalist id="accept-values">
+<option value="text/html">
+<option value="text/plain">
+<option value="application/json">
+</datalist>
+
+<datalist id="content-type-values">
+<option value="application/x-www-form-urlencoded">
+<option value="application.json">
 </datalist>
 
 </section>
@@ -196,6 +210,17 @@ function sendReq() {
     return false;
 }
 
+function getDataList() {
+    this.removeAttribute("list");
+
+    if (this.previousSibling.value === "Accept") {
+        this.setAttribute("list", "accept-values");
+    }
+    if (this.previousSibling.value === "Content-Type") {
+        this.setAttribute("list", "content-type-values");
+    }
+}
+
 function init() {
     var ii, reqInput;
     for (ii = 0; ii < reqMax; ii = ii + 1) {
@@ -206,6 +231,7 @@ function init() {
 
         reqInput = document.createElement("input");
         reqInput.id = "httpReqValue" + ii;
+        reqInput.onfocus = getDataList
         $("#reqHead").appendChild(reqInput);
     }
 }
