@@ -21,7 +21,6 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
     width: 40px;
     float: left;
     line-height: 30px;
-    vertical-align: bottom;
 }
 #uri > div {overflow: auto; }
 #uri input {
@@ -29,6 +28,7 @@ h3 {margin: 0 0 5px 0; font-size: 16px; }
     display: block;
     font-size: 15px;
     width: 100%;
+    font-family: monospace;
 }
 
 #httpReq, #httpRsp {
@@ -186,7 +186,7 @@ function sendReq() {
 
     if (entityAllowed(reqData.method)) {
         reqData.entity = $("#httpReqEntity").value;
-        if (!reqData.hdr.some(hasContentType)) {
+        if (!Object.keys(reqData.hdr).some(hasContentType)) {
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         }
     }
@@ -200,7 +200,7 @@ function sendReq() {
         $("#httpRspHeader").textContent = lineBreak(xhr.getAllResponseHeaders());
 
         if (xhr.getResponseHeader("Content-Type") === "application/json") {
-            $("#httpRspEntity").textContent = JSON.stringify(JSON.parse(xhr.responseText), null, "    ");
+            $("#httpRspEntity").textContent = JSON.stringify(JSON.parse(xhr.responseText), null, "    ");
         } else {
             $("#httpRspEntity").textContent = xhr.responseText;
         }
@@ -231,7 +231,7 @@ function init() {
 
         reqInput = document.createElement("input");
         reqInput.id = "httpReqValue" + ii;
-        reqInput.onfocus = getDataList
+        reqInput.onfocus = getDataList;
         $("#reqHead").appendChild(reqInput);
     }
 }
